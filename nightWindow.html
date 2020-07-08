@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Desired Night Time Length (IRL Time)</title>
+</head>
+<body>
+    <form>
+        <div>
+            <label>Enter Desired Night Time Length in Hours</label>
+            <input type="text" id="Hours" autofocus>
+        </div>
+        <button type="submit">OK</button>
+    </form>
+
+    <script>
+        const electron = require('electron');
+        const {ipcRenderer} = electron;
+
+        const form = document.querySelector('form');
+        form.addEventListener('submit', submitForm);
+
+        function submitForm(e){
+            e.preventDefault();
+            const item = document.querySelector('#Hours').value;
+            ipcRenderer.send('item:night', item)
+        }
+    </script>
+</body>
+</html>

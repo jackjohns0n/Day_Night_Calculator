@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Miscreated Day/Night Scale Calculator</title>
+</head>
+<body>
+  <h1>Miscreated Day/Night Scale Calculator</h1>
+  <h2></h2>
+  <h3>To use click 'File' then select 'Desired Day Time Length' or press 'Ctrl+D' and input your day 
+      length value in Hours then select 'Ok', Next click 'File again and select 'Desired Night Time 
+      Length' or press 'Ctrl+N' and input your night length value in Hours then select 'Ok'.  You will 
+      then see two values listed in the main window, these are the correct value to input into your 
+      hosting.cfg</h3>
+  <ul></ul>
+
+  <script>
+      const electron = require('electron');
+      const {ipcRenderer} = electron;
+      const ul = document.querySelector('ul');
+
+      // Add Day Time in hours
+      ipcRenderer.on('item:day', function(e, item){
+        const li = document.createElement('li');
+        const itemText = document.createTextNode(item);
+        li.appendChild(itemText);
+        ul.appendChild(li);
+      })
+      
+      // Add Night Time in hours
+      ipcRenderer.on('item:night', function(e, item){
+        const li = document.createElement('li');
+        const itemText = document.createTextNode(item);
+        li.appendChild(itemText);
+        ul.appendChild(li);
+      })
+
+      // Start over
+      ipcRenderer.on('item:clear', function(){
+          ul.innerHTML = '';
+      })
+
+  </script>
+</body>
+</html>
