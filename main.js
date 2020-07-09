@@ -1,11 +1,12 @@
 const electron = require('electron');
 const url = require('url');
 const path = require('path');
+const { autoUpdater } = require('electron-updater');
 
 const {app, BrowserWindow, Menu, ipcMain} = electron;
 
 // Set Environment
-process.env.NODE_ENV = "production";
+process.env.NODE_ENV = "";
 
 let mainWindow;
 let dayWindow;
@@ -13,8 +14,11 @@ let nightWindow
 
 // Listen for app to be ready
 app.on('ready', function(){
-    // Create new window
+    // Create new window and check for update
     mainWindow = new BrowserWindow({webPreferences: {nodeIntegration: true}});
+    mainWindow.once('ready-to-show', () => {
+        autoUpdater.checkForUpdatesAndNotify();
+      });
     // Load html into window
     mainWindow.loadURL(url.format({
         pathname: path.join(__dirname, 'mainWindow.html'),
@@ -99,6 +103,11 @@ ipcMain.on('item:night', function night(e, item){
     nightWindow.close();
 });
 
+// Catch App version number
+ipcMain.on('app_version', (event) => {
+    event.sender.send('app_version', { version: app.getVersion() });
+  });
+
 // Create menu template
 const mainMenuTemplate = [
     {
@@ -158,3 +167,16 @@ if(process.env.NODE_ENV !== 'production'){
         ]
     })
 }
+
+// Auto-Updater
+autoUpdater.on('update-available', () => {
+    mainWindow.webContents.send('update_available');
+  });
+autoUpdater.on('update-downloaded', () => {
+    mainWindow.webContents.send('update_downloaded');
+  });
+
+// Install and restart app if selected
+  ipcMain.on('restart_app', () => {
+   autoUpdater.quitAndInstall();
+  });

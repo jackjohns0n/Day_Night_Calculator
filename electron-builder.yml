@@ -1,0 +1,4 @@
+appId: Miscalculator
+publish:
+  provider: github
+  token: [0ac279899f2612fcd8d2efc08c32c12137045601]

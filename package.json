@@ -7,15 +7,23 @@
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/icon.icns --prune=true --out=release-builds",
-    "package-win": "electron-packager . Miscalculator --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Miscalculator\"",    
-    "package-linux": "electron-packager . Miscalculator --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/icon.png --prune=true --out=release-builds"
+    "package-win": "electron-packager . Miscalculator --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Miscalculator\"",
+    "package-linux": "electron-packager . Miscalculator --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/icon.png --prune=true --out=release-builds",
+    "build": "electron-builder build --win --publish never",
+    "deploy": "electron-builder build --win --publish always"
   },
   "author": "Richard Alan Greer, Jr.",
   "license": "MIT",
   "dependencies": {
-    "electron": "^9.1.0"
+    "electron-updater": "^4.3.1"
   },
   "devDependencies": {
+    "electron": "^9.1.0",
+    "electron-builder": "^22.7.0",
     "electron-packager": "^15.0.0"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/jackjohns0n/Day_Night_Calculator.git"
   }
 }
