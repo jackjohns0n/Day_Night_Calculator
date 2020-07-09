@@ -6,7 +6,7 @@ const { autoUpdater } = require('electron-updater');
 const {app, BrowserWindow, Menu, ipcMain} = electron;
 
 // Set Environment
-process.env.NODE_ENV = "";
+process.env.NODE_ENV = "production";
 
 let mainWindow;
 let dayWindow;
