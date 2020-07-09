@@ -4,6 +4,9 @@ const path = require('path');
 
 const {app, BrowserWindow, Menu, ipcMain} = electron;
 
+// Set Environment
+process.env.NODE_ENV = "production";
+
 let mainWindow;
 let dayWindow;
 let nightWindow
@@ -77,8 +80,10 @@ ipcMain.on('item:day', function day(e, item){
     console.log(item);
     DesiredDayMin = (60 * item);
     dayScaleS = (780 / DesiredDayMin);
-    mainWindow.webContents.send('item:day', dayScaleS);
+    dayScaleSdecimal = dayScaleS.toFixed(2);
+    mainWindow.webContents.send('item:day', dayScaleSdecimal);
     console.log(dayScaleS)
+    console.log(dayScaleSdecimal)
     dayWindow.close();
 });
 
@@ -87,8 +92,10 @@ ipcMain.on('item:night', function night(e, item){
     console.log(item);
     DesiredNightMin = (60 * item);
     nightScaleS = (660 / DesiredNightMin) / dayScaleS;
-    mainWindow.webContents.send('item:night', nightScaleS);
+    nightScaleSdecimal = nightScaleS.toFixed(2);
+    mainWindow.webContents.send('item:night', nightScaleSdecimal);
     console.log(nightScaleS)
+    console.log(nightScaleSdecimal)
     nightWindow.close();
 });
 

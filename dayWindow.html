@@ -2,15 +2,18 @@
 <html lang="en">
 <head>
     <title>Desired Day Time Length (IRL Time)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 </head>
-<body>
-    <form>
-        <div>
-            <label>Enter Desired Day Time Length in Hours</label>
-            <input type="text" id="Hours" autofocus>
-        </div>
-        <button type="submit">OK</button>
-    </form>
+<body class="brown darken-4">
+    <div class="container">
+        <form>
+            <div>
+                <label>Enter Desired Day Time Length in Hours</label>
+                <input type="text" id="Hours" autofocus>
+            </div>
+            <button class="btn waves-effect waves-light brown lighten-1" type="submit">OK</button>
+        </form>
+    </div>
 
     <script>
         const electron = require('electron');
