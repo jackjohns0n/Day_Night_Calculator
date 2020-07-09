@@ -3,7 +3,7 @@ Miscalculator is a program used to calculate the correct day and night scale set
 
 ## Installation
 
-Download the installer [setup.exe](https://github.com/jackjohns0n/Day_Night_Calculator/releases/download/v0.0.1/day_night_calculator-Setup-0.0.1.exe), once downloaded run the installer
+Download the [setup.exe](https://github.com/jackjohns0n/Day_Night_Calculator/releases/download/v0.0.1/day_night_calculator-Setup-0.0.1.exe), once downloaded run the installer
 
 ## Usage
 
