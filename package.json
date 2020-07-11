@@ -1,6 +1,6 @@
 {
   "name": "day_night_calculator",
-  "version": "0.0.1a",
+  "version": "0.0.2",
   "description": "Calculator to figure the day and night scale numbers for selfhosted Miscreated servers",
   "main": "main.js",
   "scripts": {
