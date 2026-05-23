@@ -1,121 +1,701 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Miscreated Day/Night Scale Calculator</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'">
+    <title>Miscalculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-      #notification {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        width: 200px;
-        padding: 20px;
-        border-radius: 5px;
-        background-color: white;
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-      }
-      .hidden {
-        display: none;
-      }
+        /* ── Reset & Variables ─────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #0e0f0d;
+            --bg2:          #161814;
+            --bg3:          #1d1f1a;
+            --border:       #2e3229;
+            --border-hi:    #4a5240;
+            --amber:        #c8a84b;
+            --amber-dim:    #7a6530;
+            --amber-glow:   rgba(200,168,75,0.12);
+            --amber-glow2:  rgba(200,168,75,0.06);
+            --green:        #6abf69;
+            --green-glow:   rgba(106,191,105,0.15);
+            --red:          #e05c5c;
+            --red-glow:     rgba(224,92,92,0.15);
+            --text:         #d4cfc4;
+            --text-dim:     #7a7670;
+            --text-bright:  #ede9e0;
+            --mono:         'Share Tech Mono', monospace;
+            --sans:         'Barlow', sans-serif;
+            --radius:       4px;
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 16px;
+            overflow: hidden;
+        }
+
+        /* ── Scanline overlay ──────────────────────────────────────── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.07) 2px,
+                rgba(0,0,0,0.07) 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* ── Layout ────────────────────────────────────────────────── */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 0;
+        }
+
+        /* ── Header ────────────────────────────────────────────────── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .logo-text {
+            font-family: var(--mono);
+            font-size: 18px;
+            color: var(--amber);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .logo-sub {
+            font-size: 13px;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        #version {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        /* ── Main content ──────────────────────────────────────────── */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 28px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        /* ── Instructions ──────────────────────────────────────────── */
+        .instructions {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--amber-dim);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+        }
+
+        .instructions h3 {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--amber);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            padding-left: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .instructions li {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .instructions li strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* ── Input Panel ───────────────────────────────────────────── */
+        .input-panel {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .input-panel h3 {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--amber);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .field-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-bright);
+            font-family: var(--mono);
+            font-size: 18px;
+            padding: 10px 52px 10px 14px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            -webkit-app-region: no-drag;
+        }
+
+        .field input:focus {
+            border-color: var(--amber-dim);
+            box-shadow: 0 0 0 3px var(--amber-glow2);
+        }
+
+        .field input:invalid,
+        .field input.error {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px var(--red-glow);
+        }
+
+        /* Remove browser number spinners */
+        .field input[type=number]::-webkit-inner-spin-button,
+        .field input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .field input[type=number] { -moz-appearance: textfield; }
+
+        .field-unit {
+            position: absolute;
+            right: 12px;
+            font-size: 13px;
+            color: var(--text-dim);
+            font-family: var(--mono);
+            pointer-events: none;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* ── Error Message ─────────────────────────────────────────── */
+        .error-msg {
+            display: none;
+            background: var(--red-glow);
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--red);
+            font-family: var(--mono);
+            margin-bottom: 4px;
+        }
+        .error-msg.visible { display: block; }
+
+        /* ── Buttons ───────────────────────────────────────────────── */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.15s;
+            -webkit-app-region: no-drag;
+        }
+
+        .btn-primary {
+            background: var(--amber);
+            color: #1a1600;
+            border-color: var(--amber);
+        }
+        .btn-primary:hover {
+            background: #d9b85a;
+            box-shadow: 0 0 14px var(--amber-glow);
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-dim);
+            border-color: var(--border);
+        }
+        .btn-ghost:hover {
+            border-color: var(--border-hi);
+            color: var(--text);
+        }
+
+        /* ── Results Panel ─────────────────────────────────────────── */
+        .results-panel {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .results-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-header span {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--green);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Fix #6: Copy button */
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            -webkit-app-region: no-drag;
+        }
+        .btn-copy:hover {
+            border-color: var(--green);
+            color: var(--green);
+            box-shadow: 0 0 8px var(--green-glow);
+        }
+        .btn-copy.copied {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .results-body {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+        }
+
+        .result-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .result-value {
+            font-family: var(--mono);
+            font-size: 17px;
+            color: var(--amber);
+        }
+
+        .result-cfg {
+            font-family: var(--mono);
+            font-size: 14px;
+            color: var(--text-bright);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            line-height: 2;
+        }
+
+        .result-cfg .cfg-key { color: var(--amber-dim); }
+        .result-cfg .cfg-val { color: var(--amber); }
+
+        .results-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-dim);
+            font-family: var(--mono);
+        }
+
+        /* ── Update notification ───────────────────────────────────── */
+        #notification {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            width: 260px;
+            background: var(--bg2);
+            border: 1px solid var(--border-hi);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        #notification.hidden { display: none; }
+
+        #notification p {
+            font-size: 12px;
+            color: var(--text);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .notif-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── Footer ────────────────────────────────────────────────── */
+        footer {
+            padding: 8px 20px;
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer span {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
     </style>
 </head>
-<body class = "brown darken-4">
-  <nav>
-    <div class = "nav-wrapper grey darken-3">
-      <a class="brand-logo left">Miscreated Day/Night Scale Calculator</a>
+<body>
+<div class="app">
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <span class="logo-text">Miscalculator</span>
+            <span class="logo-sub">Day/Night Scale Calculator</span>
+        </div>
+        <span id="version"></span>
+    </header>
+
+    <main>
+
+        <!-- Fix #7: Clear numbered instructions instead of wall of text -->
+        <div class="instructions">
+            <h3>How to Use</h3>
+            <ol>
+                <li>Enter your desired <strong>Day length</strong> and <strong>Night length</strong> in real-world hours below.</li>
+                <li>Click <strong>Calculate</strong> to generate your scale values.</li>
+                <li>Copy the output and paste both lines into your <strong>hosting.cfg</strong>.</li>
+            </ol>
+        </div>
+
+        <!-- Fix #4: Single consolidated input panel — no more popup windows -->
+        <div class="input-panel">
+            <h3>Input Parameters</h3>
+            <div class="input-row">
+                <div class="field">
+                    <label>☀ Day Length</label>
+                    <div class="field-wrapper">
+                        <!-- Fix #3: type=number, min enforced -->
+                        <input type="number" id="dayHours" min="0.1" max="24" step="0.1" placeholder="2.0" autofocus>
+                        <span class="field-unit">hrs</span>
+                    </div>
+                    <span class="field-hint">IRL hours of daytime</span>
+                </div>
+                <div class="field">
+                    <label>☽ Night Length</label>
+                    <div class="field-wrapper">
+                        <input type="number" id="nightHours" min="0.1" max="24" step="0.1" placeholder="1.0">
+                        <span class="field-unit">hrs</span>
+                    </div>
+                    <span class="field-hint">IRL hours of nighttime</span>
+                </div>
+            </div>
+
+            <!-- Fix #3: Error display area -->
+            <div class="error-msg" id="errorMsg"></div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="calcBtn">
+                    ▶ Calculate
+                </button>
+                <button class="btn btn-ghost" id="clearBtn">
+                    ↺ Start Over
+                </button>
+            </div>
+        </div>
+
+        <!-- Fix #5: Results replace, not append. Fix #6: Copy to clipboard -->
+        <div class="results-panel" id="resultsPanel">
+            <div class="results-header">
+                <span>✓ hosting.cfg Values</span>
+                <button class="btn-copy" id="copyBtn">⎘ Copy Both</button>
+            </div>
+            <div class="results-body">
+                <div class="result-row">
+                    <span class="result-label">☀ Day Scale  <small>(wm_timeScale)</small></span>
+                    <span class="result-value" id="dayResult">—</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">☽ Night Scale  <small>(wm_timeScaleNight)</small></span>
+                    <span class="result-value" id="nightResult">—</span>
+                </div>
+                <div class="result-cfg" id="cfgBlock">
+                    <span class="cfg-key">wm_timeScale</span>=<span class="cfg-val" id="cfgDay">—</span><br>
+                    <span class="cfg-key">wm_timeScaleNight</span>=<span class="cfg-val" id="cfgNight">—</span>
+                </div>
+            </div>
+            <div class="results-footer" id="resultsSummary"></div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <span><span class="status-dot"></span>Ready</span>
+        <span id="versionFooter"></span>
+    </footer>
+
+</div>
+
+<!-- Update notification -->
+<div id="notification" class="hidden">
+    <p id="notifMessage"></p>
+    <div class="notif-btns">
+        <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px;" onclick="closeNotification()">Dismiss</button>
+        <button class="btn btn-primary" id="restartBtn" style="font-size:11px;padding:6px 12px;display:none;" onclick="restartApp()">Restart Now</button>
     </div>
-  </nav>
-  <div class="container">
-    <p class="flow-text">To use click 'File' then select 'Desired Day Time Length' or press 'Ctrl+D' and input your day 
-      length value in Hours then select 'Ok', Next click 'File again and select 'Desired Night Time 
-      Length' or press 'Ctrl+N' and input your night length value in Hours then select 'Ok'.  You will 
-      then see two values listed in the main window, these are the correct value to input into your 
-      hosting.cfg</p>
-  </div>
-  <div>
-    <a>
-      <ul></ul>
-    </a>
-  </div>
-  <nav>
-    <div class = "nav-wrapper grey darken-3">
-      <a class = "brand-logo left" id="version"></a>
-    </div>
-  </nav>
+</div>
 
-  <div id="notification" class="hidden">
-    <p id="message"></p>
-    <button id="close-button" onClick="closeNotification()">
-      Close
-    </button>
-    <button id="restart-button" onClick="restartApp()" class="hidden">
-      Restart
-    </button>
-  </div>
+<script>
+    // Fix #1: All electron comms through window.electronAPI (contextBridge / preload.js)
+    const api = window.electronAPI;
 
-  <script>
-      const electron = require('electron');
-      const {ipcRenderer} = electron;
-      const ul = document.querySelector('ul');
+    // ── Version ──────────────────────────────────────────────────
+    api.getVersion();
+    api.onVersion((arg) => {
+        api.removeAllListeners('app_version');
+        const v = 'v' + arg.version;
+        document.getElementById('version').textContent = v;
+        document.getElementById('versionFooter').textContent = v;
+    });
 
-      // Add Day Time in hours
-      ipcRenderer.on('item:day', function(e, item){
-        const li = document.createElement('li');
-        const itemText = document.createTextNode(item);
-        const cvar = document.createTextNode("wm_timeScale=");
-        li.appendChild(cvar);
-        li.appendChild(itemText);
-        ul.appendChild(li);
-      })
-      
-      // Add Night Time in hours
-      ipcRenderer.on('item:night', function(e, item){
-        const li = document.createElement('li');
-        const itemText = document.createTextNode(item);
-        const cvar = document.createTextNode("wm_timeScaleNight=");
-        li.appendChild(cvar);
-        li.appendChild(itemText);
-        ul.appendChild(li);
-      })
+    // ── Calculate ─────────────────────────────────────────────────
+    document.getElementById('calcBtn').addEventListener('click', () => {
+        clearError();
+        const day = document.getElementById('dayHours').value;
+        const night = document.getElementById('nightHours').value;
 
-      // Start over
-      ipcRenderer.on('item:clear', function(){
-          ul.innerHTML = '';
-      })
+        // Client-side validation before sending to main
+        if (!day || parseFloat(day) <= 0) {
+            showError('Please enter a valid day length greater than 0.');
+            document.getElementById('dayHours').classList.add('error');
+            return;
+        }
+        if (!night || parseFloat(night) <= 0) {
+            showError('Please enter a valid night length greater than 0.');
+            document.getElementById('nightHours').classList.add('error');
+            return;
+        }
 
-      // Display App Version Number
-      const version = document.getElementById('version');
-      
-      ipcRenderer.send('app_version');
-      ipcRenderer.on('app_version', (event, arg) => {
-      ipcRenderer.removeAllListeners('app_version');
-        version.innerText = 'Version ' + arg.version;
-      });
+        api.calculate({ day, night });
+    });
 
-      // Listen for and Display update Notifications
-      const notification = document.getElementById('notification');
-      const message = document.getElementById('message');
-      const restartButton = document.getElementById('restart-button');
-      ipcRenderer.on('update_available', () => {
-        ipcRenderer.removeAllListeners('update_available');
-        message.innerText = 'A new update is available. Downloading now...';
+    // Allow Enter key to trigger calculate
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('calcBtn').click();
+    });
+
+    // ── Results ───────────────────────────────────────────────────
+    api.onResult((data) => {
+        // Fix #5: Replace results, don't append
+        document.getElementById('dayResult').textContent = data.day;
+        document.getElementById('nightResult').textContent = data.night;
+        document.getElementById('cfgDay').textContent = data.day;
+        document.getElementById('cfgNight').textContent = data.night;
+        document.getElementById('resultsSummary').textContent =
+            `Calculated for ${data.dayHours}h day / ${data.nightHours}h night`;
+
+        const panel = document.getElementById('resultsPanel');
+        panel.classList.add('visible');
+
+        // Resize window to show results without scrolling
+        api.resizeWindow({ width: 700, height: 920 });
+    });
+
+    // ── Errors from main process ──────────────────────────────────
+    api.onError((msg) => {
+        showError(msg);
+    });
+
+    // ── Clear / Start Over ────────────────────────────────────────
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        api.clear();
+    });
+
+    api.onClear(() => {
+        document.getElementById('dayHours').value = '';
+        document.getElementById('nightHours').value = '';
+        document.getElementById('resultsPanel').classList.remove('visible');
+        clearError();
+        document.getElementById('dayHours').focus();
+        // Shrink back to compact size
+        api.resizeWindow({ width: 700, height: 600 });
+    });
+
+    // Fix #6: Copy both cfg values to clipboard
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        const day = document.getElementById('cfgDay').textContent;
+        const night = document.getElementById('cfgNight').textContent;
+        const text = `wm_timeScale=${day}\nwm_timeScaleNight=${night}`;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.textContent = '✓ Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '⎘ Copy Both';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.classList.add('visible');
+    }
+
+    function clearError() {
+        document.getElementById('errorMsg').classList.remove('visible');
+        document.getElementById('dayHours').classList.remove('error');
+        document.getElementById('nightHours').classList.remove('error');
+    }
+
+    // ── Update notifications ──────────────────────────────────────
+    const notification = document.getElementById('notification');
+    const notifMessage = document.getElementById('notifMessage');
+    const restartBtn = document.getElementById('restartBtn');
+
+    api.onUpdateAvailable(() => {
+        api.removeAllListeners('update_available');
+        notifMessage.textContent = 'A new update is available. Downloading now...';
         notification.classList.remove('hidden');
-      });
-      ipcRenderer.on('update_downloaded', () => {
-        ipcRenderer.removeAllListeners('update_downloaded');
-        message.innerText = 'Update Downloaded. It will be installed on restart. Restart now?';
-        restartButton.classList.remove('hidden');
-        notification.classList.remove('hidden');
-      });
+    });
 
-      // Close update Notification or Restart App
-      function closeNotification() {
+    api.onUpdateDownloaded(() => {
+        api.removeAllListeners('update_downloaded');
+        notifMessage.textContent = 'Update downloaded. Restart to install?';
+        restartBtn.style.display = 'inline-flex';
+        notification.classList.remove('hidden');
+    });
+
+    function closeNotification() {
         notification.classList.add('hidden');
-      }
-      function restartApp() {
-        ipcRenderer.send('restart_app');
-      }
+    }
 
-  </script>
+    function restartApp() {
+        api.restartApp();
+    }
+</script>
 </body>
 </html>

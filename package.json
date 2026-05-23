@@ -1,25 +1,27 @@
 {
   "name": "day_night_calculator",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Calculator to figure the day and night scale numbers for selfhosted Miscreated servers",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "cross-env NODE_ENV=development electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "electron-builder build --win --publish never",
-    "deploy": "electron-builder build --win --publish always"
+    "build": "cross-env NODE_ENV=production electron-builder build --win --publish never",
+    "deploy": "cross-env NODE_ENV=production electron-builder build --win --publish always"
   },
   "author": "Richard Alan Greer, Jr.",
   "license": "MIT",
   "dependencies": {
-    "electron-updater": "^4.3.1"
+    "electron-context-menu": "^4.1.2",
+    "electron-updater": "^6.1.0"
   },
   "devDependencies": {
-    "electron": "^9.1.0",
-    "electron-builder": "^22.7.0"
+    "cross-env": "^7.0.3",
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/jackjohns0n/Day_Night_Calculator.git"
+    "type": "git",
+    "url": "https://github.com/jackjohns0n/Day_Night_Calculator.git"
   }
 }

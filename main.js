@@ -2,141 +2,140 @@ const electron = require('electron');
 const url = require('url');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
+const contextMenu = require('electron-context-menu').default;
 
-const {app, BrowserWindow, Menu, ipcMain} = electron;
+const { app, BrowserWindow, Menu, ipcMain } = electron;
 
-// Set Environment
-process.env.NODE_ENV = "production";
+// Set Environment via NODE_ENV — do NOT hardcode here.
+// Set NODE_ENV=development in your npm start script for dev tools.
+// e.g. "start": "cross-env NODE_ENV=development electron ."
+
+// Enable right-click context menu with copy/paste/select all throughout the app
+contextMenu({
+    showSaveImageAs: false,
+    showInspectElement: process.env.NODE_ENV !== 'production'
+});
 
 let mainWindow;
-let dayWindow;
-let nightWindow
 
-// Listen for app to be ready
-app.on('ready', function(){
-    // Create new window and check for update
-    mainWindow = new BrowserWindow({webPreferences: {nodeIntegration: true}});
+// ─── Main Window ────────────────────────────────────────────────────────────
+
+app.on('ready', function () {
+    mainWindow = new BrowserWindow({
+        width: 700,
+        height: 600,
+        minWidth: 600,
+        minHeight: 520,
+        title: 'Miscalculator',
+        webPreferences: {
+            // Fix #1: nodeIntegration OFF, contextIsolation ON, use preload
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+
     mainWindow.once('ready-to-show', () => {
         autoUpdater.checkForUpdatesAndNotify();
-      });
-    // Load html into window
+    });
+
     mainWindow.loadURL(url.format({
         pathname: path.join(__dirname, 'mainWindow.html'),
         protocol: 'file:',
         slashes: true
     }));
 
-    //Quit app when closed
-    mainWindow.on('closed', function(){
+    mainWindow.on('closed', function () {
         app.quit();
     });
 
-    // Build menu from template
     const mainMenu = Menu.buildFromTemplate(mainMenuTemplate);
-    // Insert menu
     Menu.setApplicationMenu(mainMenu);
 });
 
-// Handle create day window
-function createDayWindow(){
-    // Create new window
-    dayWindow = new BrowserWindow({
-        width: 400,
-        height: 200,
-        title: 'Desired Day Time Length (IRL Time)',
-        webPreferences: {nodeIntegration: true}
-    });
-    // Load html into window
-    dayWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'dayWindow.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-    //Garbage Collection
-    dayWindow.on('close', function(){
-        dayWindow = null;
-    });
-}
+// ─── IPC Handlers ───────────────────────────────────────────────────────────
 
-// Handle create night window
-function createNightWindow(){
-    // Create new window
-    nightWindow = new BrowserWindow({
-        width: 400,
-        height: 200,
-        title: 'Desired Night Time Length (IRL Time)',
-        webPreferences: {nodeIntegration: true}
-    });
-    // Load html into window
-    nightWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'nightWindow.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-    //Garbage Collection
-    nightWindow.on('close', function(){
-        nightWindow = null;
-    });
-}
+// Fix #2: Properly declared variables — no more accidental globals
+let dayScaleS = null;
 
-// Catch item:day
-ipcMain.on('item:day', function day(e, item){
-    console.log(item);
-    DesiredDayMin = (60 * item);
-    dayScaleS = (780 / DesiredDayMin);
-    dayScaleSdecimal = dayScaleS.toFixed(2);
-    mainWindow.webContents.send('item:day', dayScaleSdecimal);
-    console.log(dayScaleS)
-    console.log(dayScaleSdecimal)
-    dayWindow.close();
+// Fix #3: Input validation + Fix #2: declared vars + Fix #10: try/catch
+ipcMain.on('item:calculate', function (e, data) {
+    try {
+        const dayHours = parseFloat(data.day);
+        const nightHours = parseFloat(data.night);
+
+        // Validate inputs
+        if (isNaN(dayHours) || dayHours <= 0) {
+            mainWindow.webContents.send('item:error', 'Day time must be a positive number.');
+            return;
+        }
+        if (isNaN(nightHours) || nightHours <= 0) {
+            mainWindow.webContents.send('item:error', 'Night time must be a positive number.');
+            return;
+        }
+
+        const desiredDayMin = 60 * dayHours;
+        dayScaleS = 780 / desiredDayMin;
+        const dayScaleDecimal = parseFloat(dayScaleS.toFixed(2));
+
+        const desiredNightMin = 60 * nightHours;
+        const nightScaleS = (660 / desiredNightMin) / dayScaleS;
+        const nightScaleDecimal = parseFloat(nightScaleS.toFixed(2));
+
+        mainWindow.webContents.send('item:result', {
+            day: dayScaleDecimal,
+            night: nightScaleDecimal,
+            dayHours,
+            nightHours
+        });
+
+    } catch (err) {
+        console.error('Calculation error:', err);
+        mainWindow.webContents.send('item:error', 'An unexpected error occurred. Please try again.');
+    }
 });
 
-// Catch item:night
-ipcMain.on('item:night', function night(e, item){
-    console.log(item);
-    DesiredNightMin = (60 * item);
-    nightScaleS = (660 / DesiredNightMin) / dayScaleS;
-    nightScaleSdecimal = nightScaleS.toFixed(2);
-    mainWindow.webContents.send('item:night', nightScaleSdecimal);
-    console.log(nightScaleS)
-    console.log(nightScaleSdecimal)
-    nightWindow.close();
+ipcMain.on('resize_window', function (e, size) {
+    if (mainWindow) {
+        mainWindow.setSize(size.width, size.height, true); // true = animate
+    }
 });
 
-// Catch App version number
+ipcMain.on('item:clear', function () {
+    dayScaleS = null;
+    if (mainWindow) {
+        mainWindow.webContents.send('item:clear');
+    }
+});
+
 ipcMain.on('app_version', (event) => {
     event.sender.send('app_version', { version: app.getVersion() });
-  });
+});
 
-// Create menu template
+ipcMain.on('restart_app', () => {
+    autoUpdater.quitAndInstall();
+});
+
+// ─── Menu Template ──────────────────────────────────────────────────────────
+
 const mainMenuTemplate = [
     {
-        label:'File',
-        submenu:[
-            {
-                label: 'Desired Day Time Length (IRL Time)',
-                accelerator: process.platform == 'darwin' ? 'Command+D' : 'Ctrl+D',
-                click(){
-                    createDayWindow();
-                }
-            },
-            {
-                label: 'Desired Night Time Length (IRL Time)',
-                accelerator: process.platform == 'darwin' ? 'Command+N' : 'Ctrl+N',
-                click(){
-                    createNightWindow();
-                }
-            },
+        label: 'File',
+        submenu: [
             {
                 label: 'Start Over',
-                click(){
-                    mainWindow.webContents.send('item:clear');
+                accelerator: process.platform == 'darwin' ? 'Command+R' : 'Ctrl+R',
+                click() {
+                    if (mainWindow) {
+                        mainWindow.webContents.send('item:clear');
+                    }
                 }
             },
+            { type: 'separator' },
             {
                 label: 'Quit',
                 accelerator: process.platform == 'darwin' ? 'Command+Q' : 'Ctrl+Q',
-                click(){
+                click() {
                     app.quit();
                 }
             }
@@ -144,39 +143,33 @@ const mainMenuTemplate = [
     }
 ];
 
-//If mac, add empty object to menu
-if(process.platform == 'darwin'){
-    mainMenuTemplate.unshift({});
-}
-
-//Add Developer Tools item if not in production
-if(process.env.NODE_ENV !== 'production'){
+// Fix #8: NODE_ENV is no longer hardcoded — dev tools will actually show in dev
+if (process.env.NODE_ENV !== 'production') {
     mainMenuTemplate.push({
         label: 'Developer Tools',
-        submenu:[
+        submenu: [
             {
                 label: 'Toggle DevTools',
                 accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
-                click(item, focusedWindow){
-                    focusedWindow.toggleDevTools();
+                click(item, focusedWindow) {
+                    if (focusedWindow) focusedWindow.toggleDevTools();
                 }
             },
-            {
-                role: 'reload'
-            }
+            { role: 'reload' }
         ]
-    })
+    });
 }
 
-// Auto-Updater
-autoUpdater.on('update-available', () => {
-    mainWindow.webContents.send('update_available');
-  });
-autoUpdater.on('update-downloaded', () => {
-    mainWindow.webContents.send('update_downloaded');
-  });
+if (process.platform == 'darwin') {
+    mainMenuTemplate.unshift({});
+}
 
-// Install and restart app if selected
-  ipcMain.on('restart_app', () => {
-   autoUpdater.quitAndInstall();
-  });
+// ─── Auto Updater ───────────────────────────────────────────────────────────
+
+autoUpdater.on('update-available', () => {
+    if (mainWindow) mainWindow.webContents.send('update_available');
+});
+
+autoUpdater.on('update-downloaded', () => {
+    if (mainWindow) mainWindow.webContents.send('update_downloaded');
+});
